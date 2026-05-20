@@ -174,10 +174,11 @@
     background: rgba(0, 0, 0, 0.35);
   }
   input::placeholder { color: rgba(245, 243, 255, 0.3); }
-  /* date picker icon hack for dark mode */
-  input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1) brightness(1.5);
-    cursor: pointer;
+  .hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    letter-spacing: 0.3px;
   }
 
   button.primary {
@@ -365,7 +366,8 @@
   <div class="card" id="singleCard">
     <div class="input-group">
       <label for="dobSingle">Ngày sinh của bạn</label>
-      <input type="date" id="dobSingle" min="1900-01-01" max="2026-12-31">
+      <input type="text" id="dobSingle" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" autocomplete="off">
+      <div class="hint">Định dạng: ngày/tháng/năm — vd: 15/08/1995</div>
     </div>
     <button class="primary" onclick="calcSingle()">Tính Số Chủ Đạo ✨</button>
     <div class="error" id="errorSingle"></div>
@@ -385,13 +387,14 @@
     <div class="input-row">
       <div class="input-group">
         <label for="dobA">Người chơi A — Ngày sinh</label>
-        <input type="date" id="dobA" min="1900-01-01" max="2026-12-31">
+        <input type="text" id="dobA" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" autocomplete="off">
       </div>
       <div class="input-group">
         <label for="dobB">Người chơi B — Ngày sinh</label>
-        <input type="date" id="dobB" min="1900-01-01" max="2026-12-31">
+        <input type="text" id="dobB" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" autocomplete="off">
       </div>
     </div>
+    <div class="hint" style="margin-top:8px;">Định dạng: ngày/tháng/năm — vd: 15/08/1995</div>
     <button class="primary" onclick="calcPair()">Tính Tổng Số Của Cặp 💞</button>
     <div class="error" id="errorPair"></div>
 
@@ -495,10 +498,37 @@
     return { digits, sum };
   }
 
-  // Format dd/mm/yyyy
+  // Format dd/mm/yyyy from yyyy-mm-dd
   function formatDate(dateStr) {
     const [y, m, d] = dateStr.split('-');
     return `${d}/${m}/${y}`;
+  }
+
+  // Parse "dd/mm/yyyy" → { ok, iso: "yyyy-mm-dd" } or { ok:false, error }
+  function parseDOB(raw) {
+    const input = (raw || '').trim();
+    if (!input) return { ok: false, error: '⚠️ Vui lòng nhập ngày sinh (dd/mm/yyyy).' };
+    const m = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!m) return { ok: false, error: '⚠️ Sai định dạng. Phải là dd/mm/yyyy (vd: 15/08/1995).' };
+    const d = parseInt(m[1], 10);
+    const mo = parseInt(m[2], 10);
+    const y = parseInt(m[3], 10);
+    if (y < 1900 || y > 2026) return { ok: false, error: '⚠️ Năm phải từ 1900 đến 2026.' };
+    if (mo < 1 || mo > 12) return { ok: false, error: '⚠️ Tháng phải từ 01 đến 12.' };
+    const daysInMonth = new Date(y, mo, 0).getDate();
+    if (d < 1 || d > daysInMonth) return { ok: false, error: `⚠️ Ngày không hợp lệ — tháng ${mo}/${y} chỉ có ${daysInMonth} ngày.` };
+    const iso = `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    return { ok: true, iso };
+  }
+
+  // Auto-insert "/" while typing: 15081995 → 15/08/1995
+  function attachDateAutoFormat(el) {
+    el.addEventListener('input', () => {
+      let v = el.value.replace(/[^\d]/g, '').slice(0, 8);
+      if (v.length > 4) v = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+      else if (v.length > 2) v = v.slice(0, 2) + '/' + v.slice(2);
+      el.value = v;
+    });
   }
 
   function showError(id, msg) {
@@ -522,8 +552,10 @@
 
   // ----- SINGLE MODE -----
   function calcSingle() {
-    const dob = document.getElementById('dobSingle').value;
-    if (!dob) { showError('errorSingle', '⚠️ Vui lòng chọn ngày sinh.'); return; }
+    const raw = document.getElementById('dobSingle').value;
+    const parsed = parseDOB(raw);
+    if (!parsed.ok) { showError('errorSingle', parsed.error); return; }
+    const dob = parsed.iso;
 
     const { digits, sum } = sumOfDateDigits(dob);
     const result = reduceToSingle(sum);
@@ -548,9 +580,14 @@
 
   // ----- PAIR MODE -----
   function calcPair() {
-    const dobA = document.getElementById('dobA').value;
-    const dobB = document.getElementById('dobB').value;
-    if (!dobA || !dobB) { showError('errorPair', '⚠️ Vui lòng nhập đủ ngày sinh của 2 người.'); return; }
+    const rawA = document.getElementById('dobA').value;
+    const rawB = document.getElementById('dobB').value;
+    const pa = parseDOB(rawA);
+    if (!pa.ok) { showError('errorPair', 'Người A: ' + pa.error.replace(/^⚠️\s*/, '')); return; }
+    const pb = parseDOB(rawB);
+    if (!pb.ok) { showError('errorPair', 'Người B: ' + pb.error.replace(/^⚠️\s*/, '')); return; }
+    const dobA = pa.iso;
+    const dobB = pb.iso;
 
     const a = reduceToSingle(sumOfDateDigits(dobA).sum);
     const b = reduceToSingle(sumOfDateDigits(dobB).sum);
@@ -582,7 +619,8 @@
     document.getElementById('resultPair').classList.add('show');
   }
 
-  // Allow Enter key to trigger
+  // Auto-format dd/mm/yyyy while typing + Enter to submit
+  ['dobSingle', 'dobA', 'dobB'].forEach(id => attachDateAutoFormat(document.getElementById(id)));
   document.getElementById('dobSingle').addEventListener('keydown', e => { if (e.key === 'Enter') calcSingle(); });
   document.getElementById('dobA').addEventListener('keydown', e => { if (e.key === 'Enter') calcPair(); });
   document.getElementById('dobB').addEventListener('keydown', e => { if (e.key === 'Enter') calcPair(); });

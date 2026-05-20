@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The X Factor — Tính Số Chủ Đạo | N-FACTOR</title>
+<style>
+  :root {
+    --bg-1: #0f0c29;
+    --bg-2: #302b63;
+    --bg-3: #24243e;
+    --accent: #ffd86b;
+    --accent-2: #ff7eb3;
+    --accent-3: #7afcff;
+    --card: rgba(255, 255, 255, 0.08);
+    --card-border: rgba(255, 255, 255, 0.15);
+    --text: #f5f3ff;
+    --text-dim: rgba(245, 243, 255, 0.65);
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));
+    background-size: 300% 300%;
+    animation: bgShift 18s ease infinite;
+    color: var(--text);
+    min-height: 100vh;
+    padding: 32px 16px 64px;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+
+  @keyframes bgShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* Floating numbers in background */
+  .float-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .float-bg span {
+    position: absolute;
+    font-size: clamp(60px, 12vw, 140px);
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.04);
+    animation: floatUp 20s linear infinite;
+    user-select: none;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+  }
+
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    color: #1a0033;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+    box-shadow: 0 8px 24px rgba(255, 126, 179, 0.35);
+  }
+  h1 {
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 900;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  header p {
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 6px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+  }
+  .tab {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-family: inherit;
+  }
+  .tab.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #1a0033;
+    box-shadow: 0 6px 20px rgba(255, 126, 179, 0.3);
+  }
+
+  /* Card */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 28px;
+    backdrop-filter: blur(14px);
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  .input-group { flex: 1; min-width: 200px; }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  input[type="date"], input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 16px;
+    font-family: inherit;
+    transition: border 0.2s, background 0.2s;
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(0, 0, 0, 0.35);
+  }
+  input::placeholder { color: rgba(245, 243, 255, 0.3); }
+  /* date picker icon hack for dark mode */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(1.5);
+    cursor: pointer;
+  }
+
+  button.primary {
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #1a0033;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 8px 22px rgba(255, 126, 179, 0.35);
+    font-family: inherit;
+    width: 100%;
+    margin-top: 16px;
+  }
+  button.primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(255, 126, 179, 0.45); }
+  button.primary:active { transform: translateY(0); }
+
+  /* Result */
+  .result { margin-top: 24px; display: none; }
+  .result.show { display: block; animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .steps {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+    font-family: "SF Mono", "Monaco", "Consolas", monospace;
+  }
+  .step {
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+    font-size: 14px;
+    color: var(--text-dim);
+    opacity: 0;
+    animation: stepIn 0.4s forwards;
+  }
+  .step:last-child { border-bottom: none; }
+  .step .arrow { color: var(--accent); margin: 0 8px; }
+  .step .num { color: var(--accent-3); font-weight: 700; }
+  @keyframes stepIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .final {
+    text-align: center;
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(255, 216, 107, 0.15), rgba(255, 126, 179, 0.15));
+    border: 1px solid rgba(255, 216, 107, 0.3);
+    border-radius: 16px;
+  }
+  .final-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .final-num {
+    font-size: clamp(80px, 18vw, 130px);
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2), var(--accent-3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1;
+    margin: 4px 0 8px;
+    animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes pop {
+    0% { transform: scale(0.3); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .meaning {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    line-height: 1.6;
+  }
+  .meaning strong { color: var(--text); }
+
+  /* Rules card */
+  .rules {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+  .rules h3 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .rules code {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent-3);
+    font-size: 12px;
+  }
+
+  .error {
+    color: #ff7eb3;
+    font-size: 13px;
+    padding: 12px;
+    background: rgba(255, 126, 179, 0.1);
+    border-radius: 10px;
+    margin-top: 12px;
+    display: none;
+  }
+  .error.show { display: block; }
+
+  footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-top: 32px;
+    opacity: 0.7;
+  }
+
+  /* Pair mode special section */
+  .pair-result {
+    margin-top: 16px;
+    padding: 18px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 14px;
+    border: 1px dashed rgba(255, 216, 107, 0.3);
+  }
+  .pair-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 10px;
+    margin: 10px 0;
+    flex-wrap: wrap;
+  }
+  .pair-mini {
+    text-align: center;
+    flex: 1;
+    min-width: 100px;
+  }
+  .pair-mini .mini-num {
+    font-size: 42px;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .pair-mini .mini-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+  .plus {
+    font-size: 28px;
+    color: var(--accent-2);
+    font-weight: 900;
+  }
+</style>
+</head>
+<body>
+
+<div class="float-bg" id="floatBg"></div>
+
+<div class="wrap">
+  <header>
+    <span class="badge">N-FACTOR × THE X FACTOR</span>
+    <h1>Tính Số Chủ Đạo</h1>
+    <p>Khám phá con số bí ẩn từ ngày sinh của bạn ✦ Thần Số Học</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="single">Cá nhân</button>
+    <button class="tab" data-tab="pair">Ghép cặp đôi</button>
+  </div>
+
+  <!-- SINGLE MODE -->
+  <div class="card" id="singleCard">
+    <div class="input-group">
+      <label for="dobSingle">Ngày sinh của bạn</label>
+      <input type="date" id="dobSingle" min="1900-01-01" max="2026-12-31">
+    </div>
+    <button class="primary" onclick="calcSingle()">Tính Số Chủ Đạo ✨</button>
+    <div class="error" id="errorSingle"></div>
+
+    <div class="result" id="resultSingle">
+      <div class="steps" id="stepsSingle"></div>
+      <div class="final">
+        <div class="final-label">Số Chủ Đạo</div>
+        <div class="final-num" id="finalSingle">—</div>
+        <div class="meaning" id="meaningSingle"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAIR MODE -->
+  <div class="card" id="pairCard" style="display:none;">
+    <div class="input-row">
+      <div class="input-group">
+        <label for="dobA">Người chơi A — Ngày sinh</label>
+        <input type="date" id="dobA" min="1900-01-01" max="2026-12-31">
+      </div>
+      <div class="input-group">
+        <label for="dobB">Người chơi B — Ngày sinh</label>
+        <input type="date" id="dobB" min="1900-01-01" max="2026-12-31">
+      </div>
+    </div>
+    <button class="primary" onclick="calcPair()">Tính Tổng Số Của Cặp 💞</button>
+    <div class="error" id="errorPair"></div>
+
+    <div class="result" id="resultPair">
+      <div class="pair-result">
+        <div class="pair-row">
+          <div class="pair-mini">
+            <div class="mini-num" id="numA">—</div>
+            <div class="mini-label">Người A</div>
+          </div>
+          <div class="plus">+</div>
+          <div class="pair-mini">
+            <div class="mini-num" id="numB">—</div>
+            <div class="mini-label">Người B</div>
+          </div>
+          <div class="plus">=</div>
+          <div class="pair-mini">
+            <div class="mini-num" id="sumRaw" style="color:var(--accent-2);">—</div>
+            <div class="mini-label">Tổng thô</div>
+          </div>
+        </div>
+        <div class="steps" id="stepsPair" style="margin-top:14px;"></div>
+      </div>
+      <div class="final" style="margin-top:16px;">
+        <div class="final-label">Tổng Số Của Cặp</div>
+        <div class="final-num" id="finalPair">—</div>
+        <div class="meaning" id="meaningPair"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RULES -->
+  <div class="card rules">
+    <h3>📖 Quy tắc tính (theo luật N-FACTOR)</h3>
+    <p>1. Lấy <strong style="color:var(--text);">ngày + tháng + năm sinh</strong> → cộng dồn TẤT CẢ các chữ số.</p>
+    <p>2. Nếu kết quả <code>&gt; 10</code> (tức 2 chữ số trở lên) → tiếp tục cộng các chữ số cho đến khi còn <strong style="color:var(--text);">1 chữ số duy nhất (1–9)</strong>.</p>
+    <p>3. <strong style="color:var(--accent);">KHÔNG giữ master numbers</strong> — 11→2, 22→4, 33→6.</p>
+    <p>4. Khi ghép cặp: cộng số chủ đạo của 2 người, nếu &gt; 10 thì rút tiếp về 1 chữ số.</p>
+    <p style="margin-top:12px;">🏆 <strong style="color:var(--text);">Cặp NHANH NHẤT báo cáo về team N-FACTOR + TỔNG SỐ CỦA CẶP CAO NHẤT (max 9) → THẮNG.</strong></p>
+  </div>
+
+  <footer>The X Factor · 22/05/2026 · Made with ✨ for N-FACTOR team</footer>
+</div>
+
+<script>
+  // Floating background numbers
+  (function () {
+    const container = document.getElementById('floatBg');
+    const nums = ['1','2','3','4','5','6','7','8','9'];
+    for (let i = 0; i < 12; i++) {
+      const s = document.createElement('span');
+      s.textContent = nums[Math.floor(Math.random() * nums.length)];
+      s.style.left = (Math.random() * 100) + '%';
+      s.style.animationDelay = (Math.random() * 20) + 's';
+      s.style.animationDuration = (15 + Math.random() * 15) + 's';
+      container.appendChild(s);
+    }
+  })();
+
+  // Tabs
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const mode = tab.dataset.tab;
+      document.getElementById('singleCard').style.display = (mode === 'single') ? 'block' : 'none';
+      document.getElementById('pairCard').style.display = (mode === 'pair') ? 'block' : 'none';
+    });
+  });
+
+  // Meanings (positive, fun — for event vibe)
+  const MEANINGS = {
+    1: 'Lãnh đạo · Tiên phong · Độc lập. Bạn là người dám nghĩ dám làm, luôn mở đường.',
+    2: 'Hợp tác · Nhạy cảm · Cân bằng. Bạn là chất keo gắn kết mọi người.',
+    3: 'Sáng tạo · Vui vẻ · Biểu đạt. Bạn mang năng lượng tích cực đến mọi nơi.',
+    4: 'Kỷ luật · Chắc chắn · Đáng tin. Bạn là nền móng vững chãi của team.',
+    5: 'Tự do · Phiêu lưu · Linh hoạt. Bạn không ngại thay đổi và thử thách.',
+    6: 'Trách nhiệm · Quan tâm · Yêu thương. Bạn luôn chăm sóc người xung quanh.',
+    7: 'Trí tuệ · Sâu sắc · Trực giác. Bạn thấy được điều người khác bỏ qua.',
+    8: 'Quyền lực · Tham vọng · Thành tựu. Bạn sinh ra để đạt được những điều lớn lao.',
+    9: 'Vị tha · Lý tưởng · Truyền cảm hứng. Bạn có trái tim rộng lớn, nhìn xa trông rộng.'
+  };
+
+  // Core: reduce digits to single digit (NO master number exception)
+  function reduceToSingle(num) {
+    const steps = [];
+    let current = Math.abs(parseInt(num, 10));
+    while (current >= 10) {
+      const digits = String(current).split('');
+      const next = digits.reduce((a, d) => a + parseInt(d, 10), 0);
+      steps.push({ from: current, expr: digits.join(' + '), to: next });
+      current = next;
+    }
+    return { final: current, steps };
+  }
+
+  // Sum digits of a date string (yyyy-mm-dd)
+  function sumOfDateDigits(dateStr) {
+    const digits = dateStr.replace(/-/g, '').split('');
+    const sum = digits.reduce((a, d) => a + parseInt(d, 10), 0);
+    return { digits, sum };
+  }
+
+  // Format dd/mm/yyyy
+  function formatDate(dateStr) {
+    const [y, m, d] = dateStr.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 4000);
+  }
+
+  function renderSteps(containerId, stepsArr) {
+    const c = document.getElementById(containerId);
+    c.innerHTML = '';
+    stepsArr.forEach((s, idx) => {
+      const div = document.createElement('div');
+      div.className = 'step';
+      div.style.animationDelay = (idx * 0.15) + 's';
+      div.innerHTML = s;
+      c.appendChild(div);
+    });
+  }
+
+  // ----- SINGLE MODE -----
+  function calcSingle() {
+    const dob = document.getElementById('dobSingle').value;
+    if (!dob) { showError('errorSingle', '⚠️ Vui lòng chọn ngày sinh.'); return; }
+
+    const { digits, sum } = sumOfDateDigits(dob);
+    const result = reduceToSingle(sum);
+
+    const lines = [];
+    lines.push(`📅 Ngày sinh: <span class="num">${formatDate(dob)}</span>`);
+    lines.push(`➕ Cộng các chữ số: ${digits.join(' + ')} <span class="arrow">→</span> <span class="num">${sum}</span>`);
+    result.steps.forEach(s => {
+      lines.push(`🔁 Rút gọn: ${s.expr} <span class="arrow">→</span> <span class="num">${s.to}</span>`);
+    });
+    if (result.steps.length === 0 && sum < 10) {
+      // no reduction needed
+    }
+    lines.push(`🎯 Số chủ đạo: <span class="num" style="font-size:18px;">${result.final}</span>`);
+
+    renderSteps('stepsSingle', lines);
+    document.getElementById('finalSingle').textContent = result.final;
+    document.getElementById('meaningSingle').innerHTML =
+      `<strong>Số ${result.final}</strong> — ${MEANINGS[result.final] || ''}`;
+    document.getElementById('resultSingle').classList.add('show');
+  }
+
+  // ----- PAIR MODE -----
+  function calcPair() {
+    const dobA = document.getElementById('dobA').value;
+    const dobB = document.getElementById('dobB').value;
+    if (!dobA || !dobB) { showError('errorPair', '⚠️ Vui lòng nhập đủ ngày sinh của 2 người.'); return; }
+
+    const a = reduceToSingle(sumOfDateDigits(dobA).sum);
+    const b = reduceToSingle(sumOfDateDigits(dobB).sum);
+    const rawSum = a.final + b.final;
+    const pair = reduceToSingle(rawSum);
+
+    document.getElementById('numA').textContent = a.final;
+    document.getElementById('numB').textContent = b.final;
+    document.getElementById('sumRaw').textContent = rawSum;
+
+    const lines = [];
+    lines.push(`👤 A (${formatDate(dobA)}): chủ đạo = <span class="num">${a.final}</span>`);
+    lines.push(`👤 B (${formatDate(dobB)}): chủ đạo = <span class="num">${b.final}</span>`);
+    lines.push(`➕ Cộng cặp: ${a.final} + ${b.final} <span class="arrow">→</span> <span class="num">${rawSum}</span>`);
+    pair.steps.forEach(s => {
+      lines.push(`🔁 Rút gọn: ${s.expr} <span class="arrow">→</span> <span class="num">${s.to}</span>`);
+    });
+    lines.push(`🏆 Tổng số của cặp: <span class="num" style="font-size:18px;">${pair.final}</span>`);
+
+    renderSteps('stepsPair', lines);
+    document.getElementById('finalPair').textContent = pair.final;
+
+    let verdict = '';
+    if (pair.final === 9)      verdict = '🔥 ĐỈNH CAO! Đây là tổng số cao nhất có thể đạt được — cặp đôi của bạn có cơ hội THẮNG cuộc!';
+    else if (pair.final >= 7)  verdict = '✨ Tổng số rất tốt! Hãy nhanh chân lên báo cáo team N-FACTOR.';
+    else if (pair.final >= 4)  verdict = '👍 Tổng số ổn — cứ thử vận may xem nào!';
+    else                       verdict = '😊 Tổng số khiêm tốn — quan trọng là vui vẻ và làm quen được bạn mới!';
+    document.getElementById('meaningPair').innerHTML = `<strong>Tổng = ${pair.final}.</strong> ${verdict}`;
+    document.getElementById('resultPair').classList.add('show');
+  }
+
+  // Allow Enter key to trigger
+  document.getElementById('dobSingle').addEventListener('keydown', e => { if (e.key === 'Enter') calcSingle(); });
+  document.getElementById('dobA').addEventListener('keydown', e => { if (e.key === 'Enter') calcPair(); });
+  document.getElementById('dobB').addEventListener('keydown', e => { if (e.key === 'Enter') calcPair(); });
+</script>
+
+</body>
+</html>
